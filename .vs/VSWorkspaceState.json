@@ -1,6 +1,13 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Debug",
+    "\\DMGEmu",
+    "\\DMGEmu\\Debug",
+    "\\DMGEmu\\Release",
+    "\\packages",
+    "\\Release"
   ],
+  "SelectedNode": "\\README.md",
   "PreviewInSolutionExplorer": false
 }

@@ -138,7 +138,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x02: // LD (BC), A
 	{
 		programCounter++;
-		__int16 addr = (regB << 8) | regC;;
+		uint16_t addr = ((unsigned char)regB << 8) | (unsigned char)regC;
 		memMng.writeByte(addr, regA);
 		if (debug)
 			opcodeRead += std::string("LD (BC), A");
@@ -210,11 +210,13 @@ int Zx80GB::readOpcode(bool debug)
 	}
 	case 0x08 : // LD (a16),SP
 	{
+		// TODO : CHECK ENDIANNESS
 		programCounter++;
-		__int8 addrL = memMng.readByte(programCounter++);
-		__int8 addrH = memMng.readByte(programCounter++);
-		__int16 addr = (addrH << 8) | addrL;
-		//memMng.writeWord(addr, stackPointer); //TODO !!!!!
+		unsigned char addrL = memMng.readByte(programCounter++);
+		unsigned char addrH = memMng.readByte(programCounter++);
+		uint16_t addr = ((unsigned char)addrH << 8) | (unsigned char)addrL;
+		memMng.writeByte(addr, (unsigned char) (stackPointer & 0x00ff));
+		memMng.writeByte(addr+1, (unsigned char)((stackPointer >> 8) & 0x00ff));
 		if (debug)
 		{
 			std::stringstream stream;
@@ -239,7 +241,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x0A: // LD A, (BC)
 	{
 		programCounter++;
-		__int16 addr = (regB << 8) | regC;;
+		uint16_t addr = (unsigned char)(regB << 8) | (unsigned char)regC;;
 		regA = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += std::string("LD A, (BC)");
@@ -335,8 +337,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x12: // LD (DE), A
 	{
 		programCounter++;
-		_int16 addr = regD;
-		addr = (addr << 8) | regE;
+		uint16_t addr = ((unsigned char)regD << 8) | (unsigned char)regE;
 		memMng.writeByte(addr, regA);
 		if (debug)
 			opcodeRead += "LD (DE), A";
@@ -817,7 +818,6 @@ int Zx80GB::readOpcode(bool debug)
 	{
 		programCounter++;
 		uint16_t hl = getHLReg();
-		//uint16_t de = stackPointer;
 		opAdd16(hl, stackPointer);
 		setHLReg(hl);
 		if (debug)
@@ -880,6 +880,8 @@ int Zx80GB::readOpcode(bool debug)
 		resetSubFlag();
 		resetHalfCarryFlag();
 		durationInCycles = 4;
+		if (debug)
+			opcodeRead += "CCF";
 		break;
 	case 0x41 : // LD B,C
 		programCounter++;
@@ -1254,13 +1256,15 @@ int Zx80GB::readOpcode(bool debug)
 		break;
 	}
 	case 0x76: // HALT
-/*	{
-		isHalted = true;
+	{
+		programCounter++;
+		//std::cout << "HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT" << std::endl;
+		/*isHalted = true;
 		if (debug)
 			opcodeRead += "HALT";
-		durationInCycles = 4;
+		durationInCycles = 4;*/
 		break;
-	}*/
+	}
 	case 0x77: // LD (HL), A
 	{
 		programCounter++;
@@ -1444,21 +1448,33 @@ int Zx80GB::readOpcode(bool debug)
 		break;
 	case 0x90:// SUB A, B
 		durationInCycles = sub(regB);
+		if (debug)
+			opcodeRead += "SUB A, B";
 		break;
 	case 0x91:// SUB A, C
 		durationInCycles = sub(regC);
+		if (debug)
+			opcodeRead += "SUB A, C";
 		break;
 	case 0x92:// SUB A, D
 		durationInCycles = sub(regD);
+		if (debug)
+			opcodeRead += "SUB A, D";
 		break;
 	case 0x93:// SUB A, E
 		durationInCycles = sub(regE);
+		if (debug)
+			opcodeRead += "SUB A, E";
 		break;
 	case 0x94:// SUB A, H
 		durationInCycles = sub(regH);
+		if (debug)
+			opcodeRead += "SUB A, H";
 		break;
 	case 0x95:// SUB A, L
 		durationInCycles = sub(regL);
+		if (debug)
+			opcodeRead += "SUB A, L";
 		break;
 	case 0x96:// SUB A, (HL)
 	{
@@ -1466,28 +1482,44 @@ int Zx80GB::readOpcode(bool debug)
 		__int8 val = memMng.readByte(addr);
 		durationInCycles = sub(val);
 		durationInCycles += 4;
+		if (debug)
+			opcodeRead += "SUB A, (HL)";
 		break;
 	}
 	case 0x97:// SUB A, A
 		durationInCycles = sub(regA);
+		if (debug)
+			opcodeRead += "SUB A, A";
 		break;
 	case 0x98:// SBC A, B
 		durationInCycles = sbc(regB);
+		if (debug)
+			opcodeRead += "SBC A, B";
 		break;
 	case 0x99:// SBC A, C
 		durationInCycles = sbc(regC);
+		if (debug)
+			opcodeRead += "SBC A, C";
 		break;
 	case 0x9A:// SBC A, D
 		durationInCycles = sbc(regD);
+		if (debug)
+			opcodeRead += "SBC A, D";
 		break;
 	case 0x9B:// SBC A, E
 		durationInCycles = sbc(regE);
+		if (debug)
+			opcodeRead += "SBC A, E";
 		break;
 	case 0x9C:// SBC A, H
 		durationInCycles = sbc(regH);
+		if (debug)
+			opcodeRead += "SBC A, H";
 		break;
 	case 0x9D:// SBC A, L
 		durationInCycles = sbc(regL);
+		if (debug)
+			opcodeRead += "SBC A, L";
 		break;
 	case 0x9E:// SBC A, (HL)
 	{
@@ -1495,10 +1527,14 @@ int Zx80GB::readOpcode(bool debug)
 		__int8 value = memMng.readByte(addr);
 		durationInCycles = sbc(addr);
 		durationInCycles += 4;
+		if (debug)
+			opcodeRead += "SBC A, (HL)";
 		break;
 	}
 	case 0x9F:// SBC A, A
 		durationInCycles = sbc(regA);
+		if (debug)
+			opcodeRead += "SBC A, A";
 		break;
 	case 0xA0 : // AND B
 		programCounter++;
@@ -1784,12 +1820,12 @@ int Zx80GB::readOpcode(bool debug)
 	}
 	case 0xC3: // JP a16
 	{
-		std::cout << "PC  = " << std::hex << (uint16_t)programCounter << std::endl;
+		//std::cout << "PC  = " << std::hex << (uint16_t)programCounter << std::endl;
 		programCounter++;
 		uint8_t addrL = memMng.readByte(programCounter++);
-		std::cout << "AddrL = " << std::hex << (uint16_t)addrL << "Read at :" << programCounter-1 << std::endl;
+		//std::cout << "AddrL = " << std::hex << (uint16_t)addrL << "Read at :" << programCounter-1 << std::endl;
 		uint8_t addrH = memMng.readByte(programCounter++);
-		std::cout << "AddrH = " << std::hex << (uint16_t)addrH << "Read at :" << programCounter-1 << std::endl;
+		//std::cout << "AddrH = " << std::hex << (uint16_t)addrH << "Read at :" << programCounter-1 << std::endl;
 		uint16_t addr = (addrH << 8) | addrL;
 		programCounter = addr;
 		if (debug)
@@ -2039,6 +2075,13 @@ int Zx80GB::readOpcode(bool debug)
 		__int8 val = memMng.readByte(programCounter++);
 		durationInCycles = sub(val);
 		durationInCycles = +4;
+		if (debug)
+		{
+			std::stringstream stream;
+			stream << std::hex << (uint16_t)val;
+			opcodeRead += "SUB A, ";
+			opcodeRead += stream.str();
+		}
 		break;
 	}
 	case 0xD7: // RST 0x10
@@ -2120,6 +2163,13 @@ int Zx80GB::readOpcode(bool debug)
 		__int8 val = memMng.readByte(programCounter++);
 		durationInCycles = sbc(val);
 		durationInCycles += 4;
+		if (debug)
+		{
+			std::stringstream stream;
+			stream << std::hex << (uint16_t)val;
+			opcodeRead += "SBC A, ";
+			opcodeRead += stream.str();
+		}
 		break;
 	}
 	case 0xDF: // RST 0x18

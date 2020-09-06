@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "memoryManager.h"
+#include <iostream>
 
 class Zx80GB
 {

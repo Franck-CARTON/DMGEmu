@@ -258,6 +258,7 @@ bool DMG_ppu::run(int nCycle)
 void DMG_ppu::DrawBackground(uint16_t x, uint16_t y)
 {
 	unsigned char lcdReg = memMng.readByte(LCDC_CTRL_REG, true);
+	unsigned char is8000Mode = lcdReg & 0x10;
 
 	// Is background enable ?
 	bool bckgrEnable = ((lcdReg & 0x20) != 0x20);
@@ -277,13 +278,24 @@ void DMG_ppu::DrawBackground(uint16_t x, uint16_t y)
 
 		// retrieve Tiles
 		// TODO : Becarfull in some case, tile id may be a signed char !!!!
-		uint16_t tileId = 16* memMng.readByte(addr, true);
+		unsigned char tileId = memMng.readByte(addr, true);
 
 		// Wich pixel should be read ?
 		uint16_t xPix = posX % 8; 
 		uint16_t yPix = 2 *(posY % 8); // A calculer une fois pour le background
 
-		uint16_t baseAddr = 0x8000 + tileId + yPix;
+		uint16_t baseAddr = 0x8000;
+
+		if (is8000Mode != 0 )
+			baseAddr = 0x8000 + 16*tileId + yPix;
+		else
+		{
+			if (tileId < 128)
+				baseAddr = 0x9000 + 16*tileId + yPix;
+			else
+				baseAddr = 0x9000 - (16 * (256-tileId)) + yPix;
+		}
+		//uint16_t baseAddr = 0x8000 + tileMemOffset + yPix;
 		unsigned char tileLineDescr1 = memMng.readByte(baseAddr, true);
 		unsigned char tileLineDescr2 = memMng.readByte(baseAddr + 1, true);
 
@@ -294,9 +306,6 @@ void DMG_ppu::DrawBackground(uint16_t x, uint16_t y)
 		uint16_t  colorIdx = colorIdxLow + 2 * colorIdxHigh;
 
 		al_put_pixel(x, y, bgrPal[colorIdx]);
-
-		//if (addr >= 0x8190 && addr < 0x81a0)
-		//	std::cout << std::hex << "lineLow=" << (uint16_t)tileLineDescr1 << ", lineHigh=" << (uint16_t)tileLineDescr2 << std::endl;
 	}
 }
 
