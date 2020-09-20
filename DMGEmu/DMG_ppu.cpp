@@ -110,8 +110,10 @@ bool DMG_ppu::run(int nCycle)
 	uint8_t DMAAddr = (uint8_t) memMng.readByte(DMA_REG, true);
 	if (DMAAddr != 0)
 	{
+		//std::cout << "DMA in progress..." << std::endl;
 		DMAInProgress = true;
 		DMABaseAddr = DMAAddr << 8;
+		//std::cout << "Start addr = " << DMABaseAddr << std::endl;
 		DMACount = 0;
 		memMng.writeByte(DMA_REG, 0, true);
 		memMng.setDMAInProgress(true);
@@ -121,9 +123,10 @@ bool DMG_ppu::run(int nCycle)
 	if (DMAInProgress)
 	{
 		uint8_t nbOctet = nCycle / 4;
-		for (int i = 0; (i < nbOctet) && (DMABaseAddr + i < 160); i++)
+		//std::cout << "DMA Copy " << nbOctet << "octets" <<std::endl;
+		for (int i = 0; (i < nbOctet) && (DMACount + i < 160); i++)
 		{
-			__int8 valToCopy = memMng.readByte(DMABaseAddr+DMACount+i, true);
+			uint8_t valToCopy = (uint8_t)memMng.readByte(DMABaseAddr+DMACount+i, true);
 			memMng.writeByte(0xFE00+DMACount + i, valToCopy, true);
 		}
 		DMACount += nbOctet;
@@ -314,28 +317,41 @@ void DMG_ppu::DrawSprite(uint16_t x, uint16_t y)
 	// For each sprite :
 	for (int i = 0; i < nbSpriteToDisplay; i++)
 	{
-		uint8_t spriteYPos = memMng.readByte(0xfe00 + 4 * sprites[i], true);
-		uint8_t spriteXPos = memMng.readByte(0xfe00 + 4 * sprites[i] + 1, true);
-		uint8_t spriteNumber = 16 * memMng.readByte(0xfe00 + 4 * sprites[i] + 2, true);
+		uint8_t spriteXPos = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 1, true);
+		uint8_t spriteAttributes = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 3, true);
+		bool xFlip = spriteAttributes & 0x20;
+
+		if (xFlip)
+			spriteXPos = 160 - spriteXPos;
 
 		if (x >= spriteXPos - 8 && x < spriteXPos)
 		{
+
+			uint8_t spriteYPos = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i], true);
+			uint16_t spriteNumber = 16 * (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 2, true);
+			uint8_t spriteAttributes = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 3, true);
+
+			bool xFlip = spriteAttributes & 0x20;
+			bool yFlip = spriteAttributes & 0x40;
+
 			// Wich pixel from the sprite should be read ?
 			uint16_t xPix = x - (spriteXPos - 8);
+			if (xFlip)
+				xPix = 7 - (xPix-8);
+
 			uint16_t yPix = 2*(y - (spriteYPos - 16));
+			if (yFlip)
+				yPix = 7 - yPix;
 
 			uint16_t baseAddr = 0x8000 + spriteNumber + yPix;
-			unsigned char tileLineDescr1 = memMng.readByte(baseAddr, true);
-			unsigned char tileLineDescr2 = memMng.readByte(baseAddr + 1, true);
-
-			//std::cout << "word1 = " << (int)tileLineDescr1 << " and word2 = " << (int)tileLineDescr2 << std::endl;
+			unsigned char tileLineDescr1 = (uint8_t)memMng.readByte(baseAddr, true);
+			unsigned char tileLineDescr2 = (uint8_t)memMng.readByte(baseAddr + 1, true);
 
 			uint16_t mask = 0x80 >> xPix;
 			uint16_t maskInv = (7 - xPix);
 			uint16_t colorIdxLow = (tileLineDescr1 & mask) >> maskInv;
 			uint16_t colorIdxHigh = (tileLineDescr2 & mask) >> maskInv;
 			uint16_t  colorIdx = colorIdxLow + 2 * colorIdxHigh;
-			//std::cout << "xPix = " << xPix << ", colorIdxLow = " << colorIdxLow << " and colorIdxHigh = " << colorIdxHigh << " => colorIdx =" << colorIdx <<std::endl;
 
 			if (colorIdx != 0)
 				al_put_pixel(x, y, obj0Pal[colorIdx]);

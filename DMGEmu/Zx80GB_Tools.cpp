@@ -22,6 +22,12 @@ void Zx80GB::handleIRQ()
 					IRQFlag = IRQFlag ^ mask; // Reset IRQ
 					memMng.writeByte(0xFF0F, IRQFlag, true);
 					opCall(0x40 + (0x8 * i));
+
+					if (haltPending)
+					{
+						haltPending = false;
+						std::cout << "Leave Halt" << std::endl;
+					}
 					break; // Handle IRQ One after another
 				}
 			}

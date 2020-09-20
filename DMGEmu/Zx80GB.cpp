@@ -26,7 +26,7 @@ Zx80GB::Zx80GB(memoryManager& memRef) : memMng(memRef)
 	CarryFlag = false;
 
 	// Cpu status :
-	isHalted = false;
+	haltPending = false;
 	isStopped = false;
 
 	// Init interruption flag & register :
@@ -56,7 +56,12 @@ int Zx80GB::runZx80(bool debug)
 		}
 	}
 
-	if (!isStopped)
+	if (haltPending)
+	{
+		durationInCycles += 4;
+	}
+
+	if (!isStopped && !haltPending)
 	{
 		durationInCycles = readOpcode(debug);
 	}
@@ -1258,8 +1263,10 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x76: // HALT
 	{
 		programCounter++;
+		haltPending = true;
+		std::cout << "Enter Halt - " << programCounter << std::endl;
 		//std::cout << "HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT" << std::endl;
-		/*isHalted = true;
+		/*haltPending = true;
 		if (debug)
 			opcodeRead += "HALT";
 		durationInCycles = 4;*/

@@ -41,7 +41,7 @@ public:
 	bool IME;
 
 	// CPU Status
-	bool isHalted;
+	bool haltPending;
 	bool isStopped;
 
 	// For debugger :
