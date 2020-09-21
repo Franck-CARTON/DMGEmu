@@ -159,6 +159,8 @@
     <ClInclude Include="memoryManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="DMG_ppu.h" />
+    <ClInclude Include="WatchDog.h" />
+    <ClInclude Include="WatchDogHandler.h" />
     <ClInclude Include="Zx80GB.h" />
   </ItemGroup>
   <ItemGroup>
@@ -173,6 +175,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="DMG_ppu.cpp" />
+    <ClCompile Include="WatchDog.cpp" />
+    <ClCompile Include="WatchDogHandler.cpp" />
     <ClCompile Include="Zx80GB_PrefixCB.cpp" />
     <ClCompile Include="Zx80GB.cpp" />
     <ClCompile Include="Zx80GB_Tools.cpp" />

@@ -2079,7 +2079,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xD6: // SUB A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		__int8 val = memMng.readByte(programCounter+1);
 		durationInCycles = sub(val);
 		durationInCycles = +4;
 		if (debug)
@@ -2167,7 +2167,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xDE: // SBC A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		__int8 val = memMng.readByte(programCounter+1);
 		durationInCycles = sbc(val);
 		durationInCycles += 4;
 		if (debug)
