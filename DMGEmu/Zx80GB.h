@@ -23,13 +23,13 @@ public:
 	uint16_t programCounter;
 
 	// Register declaration :
-	__int8 regA;
-	__int8 regB;
-	__int8 regC;
-	__int8 regD;
-	__int8 regE;
-	__int8 regL;
-	__int8 regH;
+	uint8_t regA;
+	uint8_t regB;
+	uint8_t regC;
+	uint8_t regD;
+	uint8_t regE;
+	uint8_t regL;
+	uint8_t regH;
 
 	// Bursted F register (flag status)
 	bool ZeroFlag;
@@ -59,69 +59,70 @@ public:
 	void handleTimer(int inc);
 
 	// Opcode Mgmt : WARNING - Check if should be inline ?
-	void opAdd(__int8 &regDest, __int8 regVal);
+	void opAdd(uint8_t&regDest, uint8_t regVal);
 	void opAdd16(uint16_t &regDest, uint16_t regVal);
-	void opAdc(__int8 regVal);
-	void opInc8(__int8 &reg);
-	void opDec8(__int8 &reg);
-	void opOr(__int8 reg);
-	void opAnd(__int8 reg);
-	void opXor(__int8 reg);
+	void opAdc(uint8_t regVal);
+	void opInc8(uint8_t&reg);
+	void opDec8(uint8_t&reg);
+	void opOr(uint8_t reg);
+	void opAnd(uint8_t reg);
+	void opXor(uint8_t reg);
 	void opRet();
-	void opRst(__int8 offset);
-	void opRes(__int8 bitNumber, _int8  &reg);
-	void opBit(__int8 bitNumber, __int8 reg);
-	void opSet(__int8 bitNumber, _int8  &reg);
+	void opRst(uint8_t offset);
+	void opRes(uint8_t bitNumber, uint8_t&reg);
+	void opBit(uint8_t bitNumber, uint8_t reg);
+	void opSet(uint8_t bitNumber, uint8_t&reg);
 	void opCall(uint16_t addr);
-	void opPush(_int8 h, _int8 l);
-	void opPop(_int8 &h, _int8 &l);
-	void opSla(__int8 &reg);
-	void opRlc(__int8 &reg);
-	void opRl(__int8 &eg);
-	void opSra(__int8 &reg);
-	void opSrl(__int8 &reg);
-	void opRrc(__int8 &reg);
-	void opRr(__int8 &reg);
-	void opSwap(__int8 &reg);
-	void opCp(__int8 regVal);
+	void opPush(uint8_t h, uint8_t l);
+	void opPop(uint8_t&h, uint8_t&l);
+	void opSla(uint8_t&reg);
+	void opRlc(uint8_t&reg);
+	void opRl(uint8_t&eg);
+	void opSra(uint8_t&reg);
+	void opSrl(uint8_t&reg);
+	void opRrc(uint8_t&reg);
+	void opRr(uint8_t&reg);
+	void opSwap(uint8_t&reg);
+	void opCp(uint8_t regVal);
+	void opSub(uint8_t regVal);
 
 
 	inline uint16_t getHLReg()
 	{
-		uint16_t val = ((unsigned char)regH << 8) | (unsigned char)regL;
+		uint16_t val = regH << 8 | regL;
 		return val;
 	}
 
 	inline void setHLReg(uint16_t val)
 	{
-		regH = (val >> 8) & 0x00FF;
-		regL = val & 0x00FF;
+		regH = val >> 8;
+		regL = val;
 	}
 
 	inline uint16_t getBCReg()
 	{
-		uint16_t val = ((unsigned char)regB << 8) | (unsigned char)regC;
+		uint16_t val = regB << 8 | regC;
 		return val;
 	}
 
 	inline void setBCReg(uint16_t val)
 	{
-		regB = (val >> 8) & 0x00FF;
-		regC = val & 0x00FF;
+		regB = val >> 8;
+		regC = val;
 	}
 
 	// Get register D & E as a 16bits register
 	inline uint16_t getDEReg()
 	{
-		uint16_t val = ((unsigned char)regD << 8) | (unsigned char)regE;
+		uint16_t val = regD << 8 | regE;
 		return val;
 	}
 
 	// Set register D & E as a 16bits register
 	inline void setDEReg(uint16_t val)
 	{
-		regD = (val >> 8) & 0x00FF;
-		regE = val & 0x00FF;
+		regD = val >> 8;
+		regE = val;
 	}
 
 	// Retrieve Zero flag from F register
@@ -197,8 +198,8 @@ public:
 		_int8 res = *reg & bitMask;
 	}
 	*/
-
-	inline int sub(__int8 regVal)
+	/*
+	inline int sub(uint8_t regVal)
 	{
 		programCounter++;
 		__int16 valA = (__int16)(regA) & 0x00ff;
@@ -227,10 +228,9 @@ public:
 
 		return 4;
 	}
-
-	inline int sbc(__int8 regVal)
+	*/
+	inline int sbc(uint8_t regVal)
 	{
-		programCounter++;
 		__int16 valA = (__int16)(regA) & 0x00ff;
 		__int16 valB = (__int16)(regVal) & 0x00ff;
 		bool carry = getCarryFlag();
@@ -273,7 +273,7 @@ public:
 		return result;
 	}
 
-	inline void setFlagRegister(__int8 flagReg)
+	inline void setFlagRegister(uint8_t flagReg)
 	{
 		ZeroFlag = ((flagReg & 0x80) != 0);
 		SubFlag = ((flagReg & 0x40) != 0);

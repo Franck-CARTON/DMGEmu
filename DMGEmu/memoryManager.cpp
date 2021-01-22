@@ -10,7 +10,7 @@
 memoryManager::memoryManager()
 {
 	DMAInProgress = false;
-	memory = new __int8[65536];
+	memory = new uint8_t[65536];
 	// Boot on DMG ROM
 	memory[0xff50] = 0x00;
 }
@@ -31,7 +31,7 @@ void memoryManager::readDMGRom(std::string& fileName)
 	std::ifstream romFile(fileName.c_str(), std::ios::binary);
 	if (romFile.good())
 	{
-		romFile.read(DMGRom, 256);
+		romFile.read((char *)DMGRom, 256);
 	}
 	else
 	{
@@ -50,7 +50,7 @@ bool memoryManager::loadCartridge(std::string& fileName)
 
 		for (int i = 0;(i < 32); i++)
 		{
-			romFile.read(memory+offset, 1024);
+			romFile.read((char *)memory+offset, 1024);
 			offset += 1024;
 		}
 
@@ -74,7 +74,7 @@ void memoryManager::setDMAInProgress(bool enable)
 	DMAInProgress = enable;
 }
 
-__int8 memoryManager::readByte(uint16_t addr, bool force)
+uint8_t memoryManager::readByte(uint16_t addr, bool force)
 {
 	if (force) 
 	{
@@ -111,7 +111,7 @@ __int8 memoryManager::readByte(uint16_t addr, bool force)
 	}
 }
 
-void memoryManager::writeByte(uint16_t addr, __int8 val, bool force)
+void memoryManager::writeByte(uint16_t addr, uint8_t val, bool force)
 {
 	// If force equal true then you can write wherever you want ^^
 	if (force)
@@ -129,8 +129,8 @@ void memoryManager::writeByte(uint16_t addr, __int8 val, bool force)
 	}
 	else 
 	{
-		__int8 videoMode = memory[0xFF41] & 0x3;
-		__int8 LCDenable = memory[0xFF40] & 0x80;
+		uint8_t videoMode = memory[0xFF41] & 0x3;
+		uint8_t LCDenable = memory[0xFF40] & 0x80;
 		// Working RAM is always accessible if there is no DMA transfer
 		if (addr >= workingRAMLowAddr && addr <= workingRAMHiAddr)
 		{

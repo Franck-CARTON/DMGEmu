@@ -54,8 +54,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x06: // RLC (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opRlc(val);
 		memMng.writeByte(addr, val);
 		if (debug)
@@ -115,8 +115,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x0E: // RRC (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opRrc(val);
 		memMng.writeByte(addr, val);
 		if (debug)
@@ -176,8 +176,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x16: // RL (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opRl(val);
 		memMng.writeByte(addr, val);
 		if (debug)
@@ -237,8 +237,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x1E: // RR (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opRr(val);
 		memMng.writeByte(addr, val);
 		if (debug)
@@ -298,8 +298,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x26: // SLA (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opSla(val);
 		memMng.writeByte(addr, val);
 		if (debug)
@@ -359,8 +359,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x2E: // SRA (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opSra(val);
 		memMng.writeByte(addr, val);
 		if (debug)
@@ -420,8 +420,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x36: // SWAP (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 value = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t value = memMng.readByte(addr);
 		opSwap(value);
 		memMng.writeByte(addr, value);
 		if (debug)
@@ -481,8 +481,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0x3E: // SRL (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opSrl(val);
 		memMng.writeByte(addr, val);
 		durationInCycles = 12;
@@ -1031,7 +1031,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(0, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1092,7 +1092,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(1, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1153,7 +1153,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(2, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1214,7 +1214,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 		{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(3, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1275,7 +1275,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(4, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1336,7 +1336,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(5, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1397,7 +1397,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(6, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1458,7 +1458,7 @@ int Zx80GB::handlePrefixCB(bool debug)
 	{
 		programCounter++;
 		uint16_t addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint8_t res = memMng.readByte(addr);
 		opRes(7, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1520,8 +1520,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xC6: // SET 0,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(0, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1581,8 +1581,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xCE: // SET 1,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(1, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1642,8 +1642,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xD6: // SET 2,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(2, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1703,8 +1703,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xDE: // SET 3,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(3, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1764,8 +1764,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xE6: // SET 4,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(4, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1825,8 +1825,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xEE: // SET 5,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(5, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1886,8 +1886,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xF6: // SET 6,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(6, res);
 		memMng.writeByte(addr, res);
 		if (debug)
@@ -1947,8 +1947,8 @@ int Zx80GB::handlePrefixCB(bool debug)
 	case 0xFE: // SET 7,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 res = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t res = memMng.readByte(addr);
 		opSet(7, res);
 		memMng.writeByte(addr, res);
 		if (debug)

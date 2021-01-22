@@ -159,7 +159,9 @@
     <ClInclude Include="memoryManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="DMG_ppu.h" />
-    <ClInclude Include="WatchDog.h" />
+    <ClInclude Include="WatchDog.h">
+      <DeploymentContent>false</DeploymentContent>
+    </ClInclude>
     <ClInclude Include="WatchDogHandler.h" />
     <ClInclude Include="Zx80GB.h" />
   </ItemGroup>

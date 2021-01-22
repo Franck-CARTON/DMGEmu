@@ -26,7 +26,7 @@ void Zx80GB::handleIRQ()
 					if (haltPending)
 					{
 						haltPending = false;
-						std::cout << "Leave Halt" << std::endl;
+						//std::cout << "Leave Halt" << std::endl;
 					}
 					break; // Handle IRQ One after another
 				}
@@ -47,9 +47,9 @@ void Zx80GB::handleTimer(int inc)
 	}
 }
 
-void Zx80GB::opInc8(__int8 &reg)
+void Zx80GB::opInc8(uint8_t&reg)
 {
-	_int8 oldB = reg;
+	uint8_t oldB = reg;
 	reg++;
 
 	if (reg == 0)
@@ -65,9 +65,9 @@ void Zx80GB::opInc8(__int8 &reg)
 		resetHalfCarryFlag();
 }
 
-void Zx80GB::opDec8(__int8 &reg)
+void Zx80GB::opDec8(uint8_t&reg)
 {
-	__int8 oldB =reg;
+	uint8_t oldB =reg;
 	reg--;
 
 	if (reg == 0)
@@ -84,7 +84,7 @@ void Zx80GB::opDec8(__int8 &reg)
 }
 
 // Handle OR opcode call with flag management
-void Zx80GB::opOr(__int8 reg)
+void Zx80GB::opOr(uint8_t reg)
 {
 	regA = regA | reg;
 
@@ -99,7 +99,7 @@ void Zx80GB::opOr(__int8 reg)
 }
 
 // Handle AND opcode call with flag management
-void Zx80GB::opAnd(__int8 reg)
+void Zx80GB::opAnd(uint8_t reg)
 {
 	regA = regA & reg;
 
@@ -114,7 +114,7 @@ void Zx80GB::opAnd(__int8 reg)
 }
 
 // Handle XOR opcode call with flag management
-void Zx80GB::opXor(__int8 reg)
+void Zx80GB::opXor(uint8_t reg)
 {
 	regA = regA ^ reg;
 	if (regA == 0)
@@ -129,10 +129,10 @@ void Zx80GB::opXor(__int8 reg)
 
 // Handle BIT opcode call with flag management
 // Set Zero flag with the value of bit <bitNumber> from reg 
-void Zx80GB::opBit(__int8 bitNumber, __int8 reg)
+void Zx80GB::opBit(uint8_t bitNumber, uint8_t reg)
 {
-	__int8 bitMask = 1 << bitNumber;
-	__int8 res = reg & bitMask;
+	uint8_t bitMask = 1 << bitNumber;
+	uint8_t res = reg & bitMask;
 
 	if (res == 0)
 		setZeroFlag();
@@ -143,58 +143,59 @@ void Zx80GB::opBit(__int8 bitNumber, __int8 reg)
 	setHalfCarryFlag();
 }
 
-void Zx80GB::opRes(__int8 bitNumber, _int8  &reg)
+void Zx80GB::opRes(uint8_t bitNumber, uint8_t&reg)
 {
-	__int8 bitMask = 0xFF - (1 << bitNumber);
+	uint8_t bitMask = 0xFF - (1 << bitNumber);
 	reg = reg & bitMask;
 }
 
-void Zx80GB::opSet(__int8 bitNumber, _int8  &reg)
+void Zx80GB::opSet(uint8_t bitNumber, uint8_t&reg)
 {
-	__int8 bitMask = 1 << bitNumber;
+	uint8_t bitMask = 1 << bitNumber;
 	reg = reg | bitMask;
 }
 
 // Handle RET opcode call
 void Zx80GB::opRet()
 {
-	unsigned char pcH = (unsigned char) memMng.readByte(stackPointer+1);
-	unsigned char pcL = (unsigned char) memMng.readByte(stackPointer);
+	uint8_t pcH =  memMng.readByte(stackPointer+1);
+	uint8_t pcL =  memMng.readByte(stackPointer);
 
-	programCounter = ((uint16_t)pcH << 8) | (((uint16_t)pcL)&0x00ff) ;
+	programCounter = pcH << 8 | pcL ;
 	stackPointer = stackPointer + 2;
 }
 
 // Handle RST opcode call
-void Zx80GB::opRst(__int8 offset)
+void Zx80GB::opRst(uint8_t offset)
 {
-	__int8 pcH = (programCounter & 0xff00) >> 8;
-	__int8 pcL = programCounter & 0x00ff;
-	memMng.writeByte(stackPointer - 1, pcH);
-	memMng.writeByte(stackPointer - 2, pcL);
-	programCounter = 0x00ff & offset;
-	stackPointer = stackPointer - 2;
+	//uint8_t pcH = programCounter >> 8;
+	//uint8_t pcL = programCounter;// &0x00ff;
+	//memMng.writeByte(stackPointer - 1, pcH);
+	//memMng.writeByte(stackPointer - 2, pcL);
+	//programCounter = offset;
+	//stackPointer = stackPointer - 2;
+	opCall(offset);
 }
 
 // Handle Call opcode call
 void Zx80GB::opCall(uint16_t addr)
 {
-	__int8 pcH = (programCounter >> 8) & 0x00ff;
-	__int8 pcL = programCounter & 0x00ff;
+	uint8_t pcH = programCounter >> 8;
+	uint8_t pcL = programCounter;// &0x00ff;
 	memMng.writeByte(stackPointer - 1, pcH);
 	memMng.writeByte(stackPointer - 2, pcL);
 	stackPointer -= 2;
 	programCounter = addr;
 }
 
-void Zx80GB::opPush(_int8 h, _int8 l)
+void Zx80GB::opPush(uint8_t h, uint8_t l)
 {
 	memMng.writeByte(stackPointer - 1, h);
 	memMng.writeByte(stackPointer - 2, l);
 	stackPointer = stackPointer - 2;
 }
 
-void Zx80GB::opPop(_int8 &h, _int8 &l)
+void Zx80GB::opPop(uint8_t&h, uint8_t&l)
 {
 	l = memMng.readByte(stackPointer);
 	h = memMng.readByte(stackPointer + 1);
@@ -202,9 +203,9 @@ void Zx80GB::opPop(_int8 &h, _int8 &l)
 }
 
 // Handle SLA opcode call with flag management
-void Zx80GB::opSla(__int8 &reg)
+void Zx80GB::opSla(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = reg << 1;
 
 	if (reg == 0)
@@ -222,9 +223,9 @@ void Zx80GB::opSla(__int8 &reg)
 }
 
 // Handle RLC opcode call with flag management
-void Zx80GB::opRlc(__int8 &reg)
+void Zx80GB::opRlc(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = reg << 1;
 
 	if ((oldVal & 0x80) != 0)
@@ -246,9 +247,9 @@ void Zx80GB::opRlc(__int8 &reg)
 
 
 // Handle RL opcode call with flag management
-void Zx80GB::opRl(__int8 &reg)
+void Zx80GB::opRl(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = reg << 1;
 
 	if (getCarryFlag())
@@ -269,9 +270,9 @@ void Zx80GB::opRl(__int8 &reg)
 }
 
 // Handle SRA opcode call with flag management
-void Zx80GB::opSra(__int8 &reg)
+void Zx80GB::opSra(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = (reg >> 1) & 0x7F;
 	reg = reg | (oldVal & 0x80);
 
@@ -290,9 +291,9 @@ void Zx80GB::opSra(__int8 &reg)
 }
 
 // Handle SRL opcode call with flag management
-void Zx80GB::opSrl(__int8 &reg)
+void Zx80GB::opSrl(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = (reg >> 1) & 0x7F;
 
 	if (reg == 0)
@@ -310,9 +311,9 @@ void Zx80GB::opSrl(__int8 &reg)
 }
 
 // Handle RRC opcode call with flag management
-void Zx80GB::opRrc(__int8 &reg)
+void Zx80GB::opRrc(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = (reg >> 1) & 0x7F;
 
 	if ((oldVal & 0x01) != 0)
@@ -333,9 +334,9 @@ void Zx80GB::opRrc(__int8 &reg)
 }
 
 // Handle RR opcode call with flag management
-void Zx80GB::opRr(__int8 &reg)
+void Zx80GB::opRr(uint8_t&reg)
 {
-	_int8 oldVal = reg;
+	uint8_t oldVal = reg;
 	reg = (reg >> 1) & 0x7F;
 
 	if (getCarryFlag())
@@ -356,9 +357,9 @@ void Zx80GB::opRr(__int8 &reg)
 }
 
 // Handle SWAP opcode call with flag management
-void  Zx80GB::opSwap(__int8 &reg)
+void  Zx80GB::opSwap(uint8_t&reg)
 {
-	__int8 low = reg & 0x0f;
+	uint8_t low = reg & 0x0f;
 	reg = (reg >> 4) & 0x0f;
 	reg = reg | (low << 4);
 
@@ -373,12 +374,14 @@ void  Zx80GB::opSwap(__int8 &reg)
 }
 
 // ADD REG, REG
-void Zx80GB::opAdd(__int8 &regDest, __int8 regVal)
+void Zx80GB::opAdd(uint8_t&regDest, uint8_t regVal)
 {
-	uint16_t result = (uint8_t)regDest + (uint8_t)regVal;
-	regDest = (_int8)(result & 0x00ff);
+	uint16_t result = regDest + regVal;
+	//regDest = (uint8_t)(result & 0x00ff);
 
 	bool halfCarry = ((((regDest & 0x0f) + (regVal & 0x0f)) & 0x10) == 0x10);
+
+	regDest = (uint8_t)(result & 0x00ff);
 
 	if (regDest == 0)
 		setZeroFlag();
@@ -396,12 +399,14 @@ void Zx80GB::opAdd(__int8 &regDest, __int8 regVal)
 		setCarryFlag();
 	else
 		resetCarryFlag();
+
+	//regDest = (uint8_t)(result & 0x00ff);
 }
 
 void Zx80GB::opAdd16(uint16_t &regDest, uint16_t regVal)
 {
 	uint32_t result = regDest + regVal;
-	regDest = result & 0xffff;
+	//regDest = result & 0xffff;
 
 	resetSubFlag();
 
@@ -416,15 +421,17 @@ void Zx80GB::opAdd16(uint16_t &regDest, uint16_t regVal)
 		setCarryFlag();
 	else
 		resetCarryFlag();
+
+	regDest = result & 0xffff;
 }
 
-void Zx80GB::opAdc(__int8 regVal)
+void Zx80GB::opAdc(uint8_t regVal)
 {
-	__int16 valA = (__int16)(regA) & 0x00ff;
-	__int16 valB = (__int16)(regVal) & 0x00ff;
-	__int16 carry = getCarryFlag();
-	__int16 result = valA + valB + carry;
-	__int8 testHalfCarry = (regA & 0x0f) + (regVal & 0x0f) + (__int8)carry;
+	uint16_t valA = (uint16_t)(regA) & 0x00ff;
+	uint16_t valB = (uint16_t)(regVal) & 0x00ff;
+	uint16_t carry = getCarryFlag();
+	uint16_t result = valA + valB + carry;
+	uint8_t testHalfCarry = (regA & 0x0f) + (regVal & 0x0f) + (uint8_t)carry;
 
 	regA = (_int8)(result & 0x00ff);
 
@@ -446,14 +453,41 @@ void Zx80GB::opAdc(__int8 regVal)
 		resetCarryFlag();
 }
 
-void Zx80GB::opCp(__int8 regVal)
+void Zx80GB::opCp(uint8_t regVal)
 {
 	int16_t valA = (int16_t)(regA) & 0x00ff;
 	int16_t valB = (int16_t)(regVal) & 0x00ff;
 	int16_t result = valA - valB;
-	__int8 testHalfCarry = (regA & 0x0f) - (regVal & 0x0f);
+	int8_t testHalfCarry = (regA & 0x0f) - (regVal & 0x0f);
 
-	if (((_int8)(result & 0x00ff)) == 0)
+	if (((int8_t)(result & 0x00ff)) == 0)
+		setZeroFlag();
+	else
+		resetZeroFlag();
+
+	setSubFlag();
+
+	if (testHalfCarry < 0x00)
+		setHalfCarryFlag();
+	else
+		resetHalfCarryFlag();
+
+	if (result < 0x0000)
+		setCarryFlag();
+	else
+		resetCarryFlag();
+}
+
+void Zx80GB::opSub(uint8_t regVal)
+{
+	int16_t valA = (int16_t)(regA) & 0x00ff;
+	int16_t valB = (int16_t)(regVal) & 0x00ff;
+	int16_t result = valA - valB;
+	int8_t testHalfCarry = (regA & 0x0f) - (regVal & 0x0f);
+
+	regA = (uint8_t)(result & 0x00ff);
+
+	if (((int8_t)(result & 0x00ff)) == 0)
 		setZeroFlag();
 	else
 		resetZeroFlag();

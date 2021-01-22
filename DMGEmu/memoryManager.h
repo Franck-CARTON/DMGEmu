@@ -9,19 +9,19 @@ public:
 	memoryManager();
 	~memoryManager();
 
-	__int8 readByte(uint16_t addr, bool force=false);
-	void writeByte(uint16_t addr, __int8 val, bool force = false);
+	uint8_t readByte(uint16_t addr, bool force=false);
+	void writeByte(uint16_t addr, uint8_t val, bool force = false);
 	void readDMGRom(std::string& fileName);
 	void setDMAInProgress(bool enable);
 	bool loadCartridge(std::string& fileName);
 
 private:
 
-	std::vector<__int8*> ROMBanks;
+	std::vector<uint8_t*> ROMBanks;
 
 
-	__int8 DMGRom[256];
-	__int8 *memory;
+	uint8_t DMGRom[256];
+	uint8_t*memory;
 
 	bool DMGRomEnabled;
 	bool DMAInProgress;

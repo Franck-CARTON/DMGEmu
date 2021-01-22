@@ -268,8 +268,8 @@ void DMG_ppu::DrawBackground(uint16_t x, uint16_t y)
 
 	if (bckgrEnable && firstFrameOK )
 	{
-		uint16_t posX = x + memMng.readByte(SCROLL_X_REG, true) % 256; // A calculer (le %256) une fois pour le background pendant mode 2 et corriger uniquement si SCX change ?
-		uint16_t posY = y + memMng.readByte(SCROLL_Y_REG, true) % 256; // A calculer une fois pour le background pendant mode 2 et corriger uniquement si SCY change ?
+		uint16_t posX = (x + memMng.readByte(SCROLL_X_REG, true)) % 256; // A calculer (le %256) une fois pour le background pendant mode 2 et corriger uniquement si SCX change ?
+		uint16_t posY = (y + memMng.readByte(SCROLL_Y_REG, true)) % 256; // A calculer une fois pour le background pendant mode 2 et corriger uniquement si SCY change ?
 
 		// Wich tiles should be read ?
 		uint16_t tileRow = posY/8; // A calculer une fois pour le background
@@ -317,19 +317,16 @@ void DMG_ppu::DrawSprite(uint16_t x, uint16_t y)
 	// For each sprite :
 	for (int i = 0; i < nbSpriteToDisplay; i++)
 	{
-		uint8_t spriteXPos = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 1, true);
-		uint8_t spriteAttributes = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 3, true);
-		bool xFlip = spriteAttributes & 0x20;
+		uint8_t spriteXPos = memMng.readByte(0xfe00 + 4 * sprites[i] + 1, true);
+		uint8_t spriteAttributes = memMng.readByte(0xfe00 + 4 * sprites[i] + 3, true);
 
-		if (xFlip)
-			spriteXPos = 160 - spriteXPos;
 
 		if (x >= spriteXPos - 8 && x < spriteXPos)
 		{
 
-			uint8_t spriteYPos = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i], true);
-			uint16_t spriteNumber = 16 * (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 2, true);
-			uint8_t spriteAttributes = (uint8_t)memMng.readByte(0xfe00 + 4 * sprites[i] + 3, true);
+			uint8_t spriteYPos = memMng.readByte(0xfe00 + 4 * sprites[i], true);
+			uint16_t spriteNumber = 16 * memMng.readByte(0xfe00 + 4 * sprites[i] + 2, true);
+			uint8_t spriteAttributes = memMng.readByte(0xfe00 + 4 * sprites[i] + 3, true);
 
 			bool xFlip = spriteAttributes & 0x20;
 			bool yFlip = spriteAttributes & 0x40;
@@ -337,11 +334,11 @@ void DMG_ppu::DrawSprite(uint16_t x, uint16_t y)
 			// Wich pixel from the sprite should be read ?
 			uint16_t xPix = x - (spriteXPos - 8);
 			if (xFlip)
-				xPix = 7 - (xPix-8);
+				xPix = 7 - xPix;
 
 			uint16_t yPix = 2*(y - (spriteYPos - 16));
 			if (yFlip)
-				yPix = 7 - yPix;
+				yPix = 2 * (7-(y - (spriteYPos - 16)));
 
 			uint16_t baseAddr = 0x8000 + spriteNumber + yPix;
 			unsigned char tileLineDescr1 = (uint8_t)memMng.readByte(baseAddr, true);

@@ -143,7 +143,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x02: // LD (BC), A
 	{
 		programCounter++;
-		uint16_t addr = ((unsigned char)regB << 8) | (unsigned char)regC;
+		uint16_t addr = getBCReg();
 		memMng.writeByte(addr, regA);
 		if (debug)
 			opcodeRead += std::string("LD (BC), A");
@@ -153,7 +153,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x03: // INC BC
 	{
 		programCounter++;
-		__int16 value = getBCReg();
+		uint16_t value = getBCReg();
 		value++;
 		setBCReg(value);
 		if (debug)
@@ -191,7 +191,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x07: // RLCA
 	{
 		programCounter++;
-		_int8 oldA = regA;
+		uint8_t oldA = regA;
 		regA = regA << 1;
 
 		// Handle Carry flag
@@ -215,21 +215,22 @@ int Zx80GB::readOpcode(bool debug)
 	}
 	case 0x08 : // LD (a16),SP
 	{
-		// TODO : CHECK ENDIANNESS
 		programCounter++;
-		unsigned char addrL = memMng.readByte(programCounter++);
-		unsigned char addrH = memMng.readByte(programCounter++);
-		uint16_t addr = ((unsigned char)addrH << 8) | (unsigned char)addrL;
-		memMng.writeByte(addr, (unsigned char) (stackPointer & 0x00ff));
-		memMng.writeByte(addr+1, (unsigned char)((stackPointer >> 8) & 0x00ff));
+		uint8_t addrL = memMng.readByte(programCounter++);
+		uint8_t addrH = memMng.readByte(programCounter++);
+		uint16_t addr = addrH << 8 | addrL;
+		memMng.writeByte(addr, (uint8_t)stackPointer);
+		memMng.writeByte(addr+1, (uint8_t)(stackPointer >> 8));
 		if (debug)
 		{
 			std::stringstream stream;
 			stream << std::hex << (uint16_t)addr;
-			opcodeRead += "LD (a16), SP";
+			opcodeRead += "LD (";
 			opcodeRead += stream.str();
+			opcodeRead += "), SP";
 		}
 		durationInCycles = 20;
+		break;
 	}
 	case 0x09: // AD HL, BC
 	{
@@ -246,7 +247,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x0A: // LD A, (BC)
 	{
 		programCounter++;
-		uint16_t addr = (unsigned char)(regB << 8) | (unsigned char)regC;;
+		uint16_t addr = getBCReg();
 		regA = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += std::string("LD A, (BC)");
@@ -319,6 +320,7 @@ int Zx80GB::readOpcode(bool debug)
 	{
 		isStopped = true;
 		programCounter++;
+		programCounter++;
 		if (debug)
 			opcodeRead += "STOP";
 
@@ -327,7 +329,6 @@ int Zx80GB::readOpcode(bool debug)
 	}
 	case 0x11: // LD DE,d16
 		programCounter++;
-		// Mot de poid faible en tête
 		regE = memMng.readByte(programCounter++);
 		regD = memMng.readByte(programCounter++);
 		if (debug)
@@ -342,7 +343,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x12: // LD (DE), A
 	{
 		programCounter++;
-		uint16_t addr = ((unsigned char)regD << 8) | (unsigned char)regE;
+		uint16_t addr = ((regD << 8) | regE );
 		memMng.writeByte(addr, regA);
 		if (debug)
 			opcodeRead += "LD (DE), A";
@@ -390,7 +391,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x17: // RLA
 	{
 		programCounter++;
-		_int8 oldA = regA;
+		_int8 oldA = regA; // TODO Recheck validity (_int8 or uint8_t ?)
 		regA = regA << 1;
 
 		if (getCarryFlag())
@@ -415,11 +416,11 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x18: // JR d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
-		programCounter += (__int16)val;
+		int8_t val = (int8_t)memMng.readByte(programCounter++);
+		programCounter += (uint16_t)val;
 		if (debug)
 		{
-			unsigned char val2Disp = (unsigned char)val;
+			uint8_t val2Disp = (uint8_t)val;
 			std::stringstream stream;
 			stream << std::hex << (uint16_t)val2Disp;
 			opcodeRead += "JR ";
@@ -454,9 +455,9 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x1B: // DEC DE
 	{
 		programCounter++;
-		uint16_t bc = getDEReg();
-		bc--;
-		setDEReg(bc);
+		uint16_t de = getDEReg();
+		de--;
+		setDEReg(de);
 		if (debug)
 			opcodeRead += std::string("DEC DE");
 		durationInCycles = 8;
@@ -516,7 +517,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x20: // JR NZ, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		int8_t val = (int8_t)memMng.readByte(programCounter++);
 		if (getZeroFlag())
 			durationInCycles = 8;
 		else
@@ -553,7 +554,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x22: // LD (HL+), A
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regA);
 		setHLReg(++addr);
 		if (debug)
@@ -564,7 +565,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x23: // INC HL
 	{
 		programCounter++;
-		__int16 value = getHLReg();
+		uint16_t value = getHLReg();
 		value++;
 		setHLReg(value);
 		if (debug)
@@ -599,6 +600,32 @@ int Zx80GB::readOpcode(bool debug)
 		}
 		durationInCycles = 8;
 		break;
+	case 0x27: // DAA
+		programCounter++;
+		
+		if (!getSubFlag())
+		{
+			if (getCarryFlag() || regA > 0x99) { regA += 0x60; setCarryFlag(); }
+			if (getHalfCarryFlag() || (regA & 0x0f)> 0x09) { regA += 0x6; }
+		}
+		else
+		{
+			if (getCarryFlag()) { regA -= 0x60; }
+			if (getHalfCarryFlag()) { regA -= 0x6; }
+		}
+
+		if (regA == 0) { setZeroFlag(); }
+		else { resetZeroFlag(); }
+
+		resetHalfCarryFlag();
+
+		if (debug)
+		{
+			opcodeRead += "DAA";
+		}
+		durationInCycles = 4;
+
+		break;
 	case 0x28: // JR Z, d8
 	{
 		programCounter++;
@@ -612,7 +639,7 @@ int Zx80GB::readOpcode(bool debug)
 		}
 		if (debug)
 		{
-			unsigned char val2Disp = (unsigned char)val;
+			uint8_t val2Disp = (uint8_t)val;
 			std::stringstream stream;
 			stream << std::hex << (uint16_t)val2Disp;
 			opcodeRead += "JR Z, ";
@@ -635,7 +662,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x2A: // LD A, (HL+)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regA = memMng.readByte(addr);
 		setHLReg(++addr);
 		if (debug)
@@ -646,9 +673,9 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x2B: // DEC HL
 	{
 		programCounter++;
-		uint16_t bc = getHLReg();
-		bc--;
-		setHLReg(bc);
+		uint16_t hl = getHLReg();
+		hl--;
+		setHLReg(hl);
 		if (debug)
 			opcodeRead += std::string("DEC HL");
 		durationInCycles = 8;
@@ -703,7 +730,7 @@ int Zx80GB::readOpcode(bool debug)
 		}
 		if (debug)
 		{
-			unsigned char val2Disp = (unsigned char)val;
+			uint8_t val2Disp = (uint8_t)val;
 			std::stringstream stream;
 			stream << std::hex << (uint16_t)val2Disp;
 			opcodeRead += "JR NC, ";
@@ -748,20 +775,20 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x34: // INC (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 value = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t value = memMng.readByte(addr);
 		opInc8(value);
 		memMng.writeByte(addr, value);
 		if (debug)
-			opcodeRead += "INC E";
+			opcodeRead += "INC (HL)";
 		durationInCycles = 12;
 		break;
 	}
 	case 0x35: // DEC (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 value= memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t value= memMng.readByte(addr);
 		opDec8(value);
 		memMng.writeByte(addr, value);
 		if (debug)
@@ -772,8 +799,8 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x36: // LD (HL), d8
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 value = memMng.readByte(programCounter++);
+		uint16_t addr = getHLReg();
+		uint8_t value = memMng.readByte(programCounter++);
 		memMng.writeByte(addr, value);
 		if (debug)
 		{
@@ -811,7 +838,7 @@ int Zx80GB::readOpcode(bool debug)
 		}
 		if (debug)
 		{
-			unsigned char val2Disp = (unsigned char)val;
+			uint8_t val2Disp = (uint8_t)val;
 			std::stringstream stream;
 			stream << std::hex << (uint16_t)val2Disp;
 			opcodeRead += "JR C, ";
@@ -833,7 +860,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x3A: // LD A, (HL-)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regA = memMng.readByte(addr);
 		setHLReg(--addr);
 		if (debug)
@@ -868,7 +895,7 @@ int Zx80GB::readOpcode(bool debug)
 		if (debug)
 		{
 			std::stringstream stream;
-			unsigned char val = (unsigned char)regA;
+			uint8_t val = (uint8_t)regA;
 			stream << std::hex << (uint16_t)val;
 			opcodeRead += "LD A, ";
 			opcodeRead += stream.str();
@@ -926,7 +953,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x46: // LD B,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regB = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD B, (HL)";
@@ -978,7 +1005,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x4E: // LD C,(HL)
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regC = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD C, (HL)";
@@ -1030,7 +1057,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x56: // LD D,(HL)
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regD = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD D, (HL)";
@@ -1082,7 +1109,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x5E: // LD E,(HL)
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regE = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD E, (HL)";
@@ -1134,7 +1161,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x66: // LD H,(HL)
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regH = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD H, (HL)";
@@ -1186,7 +1213,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x6E : // LD L,(HL)
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regL = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD L, (HL)";
@@ -1203,7 +1230,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x70 : // LD (HL), B
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regB);
 		if (debug)
 			opcodeRead += "LD (HL), B";
@@ -1213,7 +1240,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x71: // LD (HL), C
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regC);
 		if (debug)
 			opcodeRead += "LD (HL), C";
@@ -1223,7 +1250,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x72: // LD (HL), D
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regD);
 		if (debug)
 			opcodeRead += "LD (HL), D";
@@ -1233,7 +1260,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x73: // LD (HL), E
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regE);
 		if (debug)
 			opcodeRead += "LD (HL), E";
@@ -1243,7 +1270,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x74: // LD (HL), H
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regH);
 		if (debug)
 			opcodeRead += "LD (HL), H";
@@ -1253,7 +1280,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x75: // LD (HL), L
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regL);
 		if (debug)
 			opcodeRead += "LD (HL), L";
@@ -1264,7 +1291,7 @@ int Zx80GB::readOpcode(bool debug)
 	{
 		programCounter++;
 		haltPending = true;
-		std::cout << "Enter Halt - " << programCounter << std::endl;
+		//std::cout << "Enter Halt - " << programCounter << std::endl;
 		//std::cout << "HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT HALT" << std::endl;
 		/*haltPending = true;
 		if (debug)
@@ -1275,7 +1302,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x77: // LD (HL), A
 	{
 		programCounter++;
-		_int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		memMng.writeByte(addr, regA);
 		if (debug)
 			opcodeRead += "LD (HL), A";
@@ -1327,7 +1354,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x7E : // LD A,(HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
+		uint16_t addr = getHLReg();
 		regA = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "LD A, (HL)";
@@ -1378,8 +1405,8 @@ int Zx80GB::readOpcode(bool debug)
 		break;
 	case 0x86:// ADD A, (HL)
 	{
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		programCounter++;
 		opAdd(regA, val);
 		if (debug)
@@ -1439,8 +1466,8 @@ int Zx80GB::readOpcode(bool debug)
 	case 0x8E:// ADC A, (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += "ADC A, (HL)";
 		durationInCycles = 8;
@@ -1454,47 +1481,62 @@ int Zx80GB::readOpcode(bool debug)
 		durationInCycles = 4;
 		break;
 	case 0x90:// SUB A, B
-		durationInCycles = sub(regB);
+		programCounter++;
+		opSub(regB);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, B";
 		break;
 	case 0x91:// SUB A, C
-		durationInCycles = sub(regC);
+		programCounter++;
+		opSub(regC);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, C";
 		break;
 	case 0x92:// SUB A, D
-		durationInCycles = sub(regD);
+		programCounter++;
+		opSub(regD);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, D";
 		break;
 	case 0x93:// SUB A, E
-		durationInCycles = sub(regE);
+		programCounter++;
+		opSub(regE);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, E";
 		break;
 	case 0x94:// SUB A, H
-		durationInCycles = sub(regH);
+		programCounter++;
+		opSub(regH);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, H";
 		break;
 	case 0x95:// SUB A, L
-		durationInCycles = sub(regL);
+		programCounter++;
+		opSub(regL);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, L";
 		break;
 	case 0x96:// SUB A, (HL)
 	{
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
-		durationInCycles = sub(val);
-		durationInCycles += 4;
+		programCounter++;
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
+		opSub(val);
+		durationInCycles = 8;
 		if (debug)
 			opcodeRead += "SUB A, (HL)";
 		break;
 	}
 	case 0x97:// SUB A, A
-		durationInCycles = sub(regA);
+		programCounter++;
+		opSub(regA);
+		durationInCycles = 4;
 		if (debug)
 			opcodeRead += "SUB A, A";
 		break;
@@ -1530,8 +1572,8 @@ int Zx80GB::readOpcode(bool debug)
 		break;
 	case 0x9E:// SBC A, (HL)
 	{
-		__int16 addr = getHLReg();
-		__int8 value = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t value = memMng.readByte(addr);
 		durationInCycles = sbc(addr);
 		durationInCycles += 4;
 		if (debug)
@@ -1588,8 +1630,8 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xA6: // AND (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opAnd(val);
 		if (debug)
 			opcodeRead += "AND (HL)";
@@ -1648,8 +1690,8 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xAE: // XOR (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opXor(val);
 		if (debug)
 			opcodeRead += "XOR (HL)";
@@ -1707,8 +1749,8 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xB6: // OR (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 val = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t val = memMng.readByte(addr);
 		opOr(val);
 		if (debug)
 			opcodeRead += "OR (HL)";
@@ -1767,8 +1809,8 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xBE: // CP (HL)
 	{
 		programCounter++;
-		__int16 addr = getHLReg();
-		__int8 value = memMng.readByte(addr);
+		uint16_t addr = getHLReg();
+		uint8_t value = memMng.readByte(addr);
 		opCp(value);
 		if (debug)
 			opcodeRead += "CP (HL)";
@@ -1827,12 +1869,9 @@ int Zx80GB::readOpcode(bool debug)
 	}
 	case 0xC3: // JP a16
 	{
-		//std::cout << "PC  = " << std::hex << (uint16_t)programCounter << std::endl;
 		programCounter++;
 		uint8_t addrL = memMng.readByte(programCounter++);
-		//std::cout << "AddrL = " << std::hex << (uint16_t)addrL << "Read at :" << programCounter-1 << std::endl;
 		uint8_t addrH = memMng.readByte(programCounter++);
-		//std::cout << "AddrH = " << std::hex << (uint16_t)addrH << "Read at :" << programCounter-1 << std::endl;
 		uint16_t addr = (addrH << 8) | addrL;
 		programCounter = addr;
 		if (debug)
@@ -1878,12 +1917,12 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xC6: // ADD A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		uint8_t val = memMng.readByte(programCounter++);
 		opAdd(regA, val);
 		if (debug)
 		{
 			std::stringstream stream;
-			unsigned char val2Disp = (unsigned char)val;
+			uint8_t val2Disp = (uint8_t)val;
 			stream << std::hex << (uint16_t)val2Disp;
 			opcodeRead += "ADD A, ";
 			opcodeRead += stream.str();
@@ -1942,7 +1981,7 @@ int Zx80GB::readOpcode(bool debug)
 	}
 	case 0xCB: // CB Prefix
 		programCounter++;
-		prefixHandlingDuration = handlePrefixCB(debug);
+		prefixHandlingDuration = handlePrefixCB(debug);  // TODO Check return value in a better way ???
 		if (prefixHandlingDuration > 0)
 		{
 			durationInCycles = 4 + prefixHandlingDuration;
@@ -1991,8 +2030,15 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xCE: // ADC A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		uint8_t val = memMng.readByte(programCounter++);
 		opAdc(val);
+		if (debug)
+		{
+			std::stringstream stream;
+			stream << std::hex << (uint16_t)val;
+			opcodeRead += "ADC A, ";
+			opcodeRead += stream.str();
+		}
 		durationInCycles = 8;
 		break;
 	}
@@ -2079,9 +2125,9 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xD6: // SUB A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter+1);
-		durationInCycles = sub(val);
-		durationInCycles = +4;
+		uint8_t val = memMng.readByte(programCounter++);
+		opSub(val);
+		durationInCycles = 8;
 		if (debug)
 		{
 			std::stringstream stream;
@@ -2167,7 +2213,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xDE: // SBC A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter+1);
+		uint8_t val = memMng.readByte(programCounter++);
 		durationInCycles = sbc(val);
 		durationInCycles += 4;
 		if (debug)
@@ -2189,7 +2235,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xE0: // LDH (a8),A
 	{
 		programCounter++;
-		unsigned char value = (unsigned char)memMng.readByte(programCounter++);
+		uint8_t value = memMng.readByte(programCounter++);
 		uint16_t addr = 0xff00 + value;
 		memMng.writeByte(addr, regA);
 		if (debug)
@@ -2213,7 +2259,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xE2: // LD (C), A
 	{
 		programCounter++;
-		uint16_t addr = 0xff00 + (unsigned char)regC;
+		uint16_t addr = 0xff00 + regC;
 		memMng.writeByte(addr, regA);
 		if (debug)
 			opcodeRead += std::string("LD (C), A");
@@ -2230,7 +2276,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xE6: // AND d8
 	{
 		programCounter++;
-		__int8 value = memMng.readByte(programCounter++);
+		uint8_t value = memMng.readByte(programCounter++);
 		opAnd(value);
 		if (debug)
 		{
@@ -2249,6 +2295,40 @@ int Zx80GB::readOpcode(bool debug)
 			opcodeRead += "RST 0x20";
 		durationInCycles = 16;
 		break;
+	case 0XE8: // ADD SP, r8
+	{
+		programCounter++;
+		int16_t hl = (int16_t)stackPointer;
+		int8_t value = (int8_t)memMng.readByte(programCounter++);
+		hl += value;
+		resetZeroFlag();
+		resetSubFlag();
+
+		// Test Carry
+		uint16_t carry = (uint16_t)(stackPointer & 0x00ff) + ((uint16_t)value & 0x00ff);
+		if (carry > 0x00ff)
+			setCarryFlag();
+		else
+			resetCarryFlag();
+
+		// Test halfCarry
+		uint8_t halfCarry = (uint8_t)(stackPointer & 0x000f) + (uint8_t)(value & 0x0f);
+		if (halfCarry > 0x0f)
+			setHalfCarryFlag();
+		else
+			resetHalfCarryFlag();
+
+		stackPointer = hl;
+		if (debug)
+		{
+			std::stringstream stream;
+			stream << std::hex << (uint16_t)value;
+			opcodeRead += "ADD SP + ";
+			opcodeRead += stream.str();
+		}
+		durationInCycles = 16;
+		break;
+	}
 	case 0xE9: // JP (HL)
 		programCounter++;
 		programCounter = getHLReg();
@@ -2277,7 +2357,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xEE: // XOR A, d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		uint8_t val = memMng.readByte(programCounter++);
 		opXor(val);
 		durationInCycles = 8;
 		break;
@@ -2292,9 +2372,9 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xF0: // LDH A, (a8)
 	{
 		programCounter++;
-		unsigned char value2Load = (unsigned char)memMng.readByte(programCounter++);
+		uint8_t value2Load = memMng.readByte(programCounter++);
 		uint16_t addr = 0xff00 + value2Load;
-		regA = (unsigned char)memMng.readByte(addr);
+		regA = memMng.readByte(addr);
 		if (debug)
 		{
 			std::stringstream stream;
@@ -2309,7 +2389,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xF1: // POP AF
 	{
 		programCounter++;
-		__int8 flagReg = getFlagRegister();
+		uint8_t flagReg = getFlagRegister();
 		opPop(regA, flagReg);
 		setFlagRegister(flagReg);
 		if (debug)
@@ -2320,7 +2400,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xF2: // LD A, (C)
 	{
 		programCounter++;
-		uint16_t addr = 0xff00 + (unsigned char)regC;
+		uint16_t addr = 0xff00 + regC;
 		regA = memMng.readByte(addr);
 		if (debug)
 			opcodeRead += std::string("LD A, (C)");
@@ -2336,7 +2416,6 @@ int Zx80GB::readOpcode(bool debug)
 		break;
 	case 0xF5: // PUSH AF
 		programCounter++;
-
 		opPush(regA, getFlagRegister());
 		if (debug)
 			opcodeRead += "PUSH AF";
@@ -2345,7 +2424,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xF6: // OR d8
 	{
 		programCounter++;
-		__int8 value = memMng.readByte(programCounter++);
+		uint8_t value = memMng.readByte(programCounter++);
 		opOr(value);
 		durationInCycles = 8;
 		break;
@@ -2357,19 +2436,35 @@ int Zx80GB::readOpcode(bool debug)
 			opcodeRead += "RST 0x30";
 		durationInCycles = 16;
 		break;
-	/*
+	
 	case 0XF8: // LD HL, SP+r8
 	{
 		programCounter++;
-		uint16_t hl = getHLReg();
-		__int8 value = memMng.readByte(programCounter++);
+		int16_t hl = (int16_t)stackPointer;
+		int8_t value = (int8_t)memMng.readByte(programCounter++);
 		hl += value;
 		resetZeroFlag();
 		resetSubFlag();
+
+		// Test Carry
+		uint16_t carry = (uint16_t)(stackPointer & 0x00ff) + ((uint16_t)value & 0x00ff);
+		if (carry > 0x00ff)
+			setCarryFlag();
+		else
+			resetCarryFlag();
+
+		// Test halfCarry
+		uint8_t halfCarry = (uint8_t)(stackPointer & 0x000f) + (uint8_t)(value & 0x0f);
+		if (halfCarry > 0x0f)
+			setHalfCarryFlag();
+		else
+			resetHalfCarryFlag();
+
+		setHLReg((uint16_t)hl);
 		if (debug)
 		{
 			std::stringstream stream;
-			stream << std::hex << (uint16_t)addr;
+			stream << std::hex << (uint16_t)value;
 			opcodeRead += "LD HL, SP + (";
 			opcodeRead += stream.str();
 			opcodeRead += ")";
@@ -2377,14 +2472,23 @@ int Zx80GB::readOpcode(bool debug)
 		durationInCycles = 16;
 		break;
 	}
-	*/
+
+	case 0xF9: // LD SP, HL
+	{
+		programCounter++;
+		stackPointer = getHLReg();
+		if (debug)
+			opcodeRead += "LD SP, HL";
+		durationInCycles = 8;
+		break;
+	}
 	case 0XFA: // LD A, (a16)
 	{
 		programCounter++;
 		uint8_t addrL = memMng.readByte(programCounter++);
 		uint8_t addrH = memMng.readByte(programCounter++);
 		uint16_t addr = (addrH << 8) | addrL;
-		__int8 value = memMng.readByte(addr);
+		uint8_t value = memMng.readByte(addr);
 		regA = value;
 		if (debug)
 		{
@@ -2407,7 +2511,7 @@ int Zx80GB::readOpcode(bool debug)
 	case 0xFE: // CP d8
 	{
 		programCounter++;
-		__int8 val = memMng.readByte(programCounter++);
+		uint8_t val = memMng.readByte(programCounter++);
 		opCp(val);
 		if (debug)
 		{
