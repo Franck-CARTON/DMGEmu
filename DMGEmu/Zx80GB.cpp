@@ -306,7 +306,7 @@ int Zx80GB::readOpcode(bool debug)
 		else
 			resetCarryFlag();
 
-		setZeroFlag();
+		resetZeroFlag();
 		resetSubFlag();
 		resetHalfCarryFlag();
 
@@ -1468,6 +1468,8 @@ int Zx80GB::readOpcode(bool debug)
 		programCounter++;
 		uint16_t addr = getHLReg();
 		uint8_t val = memMng.readByte(addr);
+		opAdc(val);
+		memMng.writeByte(addr, val);
 		if (debug)
 			opcodeRead += "ADC A, (HL)";
 		durationInCycles = 8;
@@ -1541,46 +1543,55 @@ int Zx80GB::readOpcode(bool debug)
 			opcodeRead += "SUB A, A";
 		break;
 	case 0x98:// SBC A, B
+		programCounter++;
 		durationInCycles = sbc(regB);
 		if (debug)
 			opcodeRead += "SBC A, B";
 		break;
 	case 0x99:// SBC A, C
+		programCounter++;
 		durationInCycles = sbc(regC);
 		if (debug)
 			opcodeRead += "SBC A, C";
 		break;
 	case 0x9A:// SBC A, D
+		programCounter++;
 		durationInCycles = sbc(regD);
 		if (debug)
 			opcodeRead += "SBC A, D";
 		break;
 	case 0x9B:// SBC A, E
+		programCounter++;
 		durationInCycles = sbc(regE);
 		if (debug)
 			opcodeRead += "SBC A, E";
 		break;
 	case 0x9C:// SBC A, H
+		programCounter++;
 		durationInCycles = sbc(regH);
 		if (debug)
 			opcodeRead += "SBC A, H";
 		break;
 	case 0x9D:// SBC A, L
+		programCounter++;
 		durationInCycles = sbc(regL);
 		if (debug)
 			opcodeRead += "SBC A, L";
 		break;
 	case 0x9E:// SBC A, (HL)
 	{
+		programCounter++;
 		uint16_t addr = getHLReg();
 		uint8_t value = memMng.readByte(addr);
-		durationInCycles = sbc(addr);
+		durationInCycles = sbc(value);
 		durationInCycles += 4;
+		memMng.writeByte(addr, value);
 		if (debug)
 			opcodeRead += "SBC A, (HL)";
 		break;
 	}
 	case 0x9F:// SBC A, A
+		programCounter++;
 		durationInCycles = sbc(regA);
 		if (debug)
 			opcodeRead += "SBC A, A";

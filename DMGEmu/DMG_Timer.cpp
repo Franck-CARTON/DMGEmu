@@ -84,7 +84,7 @@ void DMG_Timer::run(int nbCycles)
 				{
 					TIMA++;
 				}
-				memMng.writeByte(0xff04, TIMA, true);
+				memMng.writeByte(0xff05, TIMA, true);
 			}
 		}
 
@@ -96,6 +96,7 @@ void DMG_Timer::run(int nbCycles)
 			{
 				// TIMA Overflow => Reset TIMA with TMA Value
 				TIMA = TMA;
+				memMng.writeByte(0xff05, TIMA, true);
 
 				// TIMA Overflow => Set Timer Interruption Request :
 				IF = IF & 0x04;
